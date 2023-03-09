@@ -1,0 +1,9 @@
+.vs/
+obj/
+.vscode/
+bin/
+obj/
+*.user
+/Setup.exe
+/.idea
+packages/
