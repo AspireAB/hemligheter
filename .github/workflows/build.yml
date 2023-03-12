@@ -2,6 +2,7 @@ name: .NET Build
 
 env:
   Solution_Name: Hemligheter.sln
+  Configuration: Release
 
 on:
   push:
@@ -13,10 +14,6 @@ jobs:
   build:
     runs-on: windows-latest
     
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-
     steps:
       - uses: actions/checkout@v3
 
@@ -33,7 +30,7 @@ jobs:
         run: mkdir _build
 
       - name: Build Solution
-        run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:OutDir="./_build"
+        run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutDir="./_build"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
