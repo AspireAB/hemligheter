@@ -1,0 +1,32 @@
+﻿@using Hemligheter.Data
+@typeparam TItem
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        @foreach (var parent in Node.Parents.Reverse())
+        {
+            <li class="breadcrumb-item">
+                <a href="#" @onclick="() => OnClickNode(parent)" @onclick:preventDefault>@parent.Name</a>
+            </li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@Node.Name</li>
+    </ol>
+</nav>
+
+@code {
+    [Parameter]
+    public Node<TItem> Node { get; set; }
+
+    [Parameter]
+    public EventCallback<Node<TItem>> OnSelectNode { get; set; }
+
+    private string[] _nodeSegments => Node.Path.Split("-");
+
+    private void OnClickNode(Node<TItem> node)
+    {
+        if (OnSelectNode.HasDelegate)
+        {
+            OnSelectNode.InvokeAsync(node);
+        }
+    }
+}

@@ -1,0 +1,120 @@
+﻿@page "/"
+@implements IDisposable
+
+@using Azure.ResourceManager.KeyVault
+@using Azure.Security.KeyVault.Secrets
+@using System.Threading
+
+@inject KeyVaultService KeyVaultService
+
+<sidebar class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark overflow-auto shadow" style="width: 300px">
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center m-3">
+            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div>
+        </div>
+    }
+    else if (_nodes != null)
+    {
+        <NodeList TItem="SecretProperties" Nodes="@_nodes" OnSelectNode="@NodeSelected" ActiveNode="@_selectedNode" />
+    }
+</sidebar>
+
+<content class="flex-fill overflow-auto">
+
+    <nav class="navbar bg-light">
+        <div class="container-fluid">
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            </form>
+            <User />
+        </div>
+    </nav>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center m-3">
+            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div>
+        </div>
+        <div class="d-flex justify-content-center">
+            <p>@(_progress ?? "Loading...")</p>
+        </div>
+    }
+    else @if (_selectedNode != null)
+    {
+        <div class="p-3 pt-4 ">
+            <Navigation TItem="SecretProperties" Node="@_selectedNode" OnSelectNode="@NodeSelected" />
+            <NodeDetails Node="@_selectedNode" OnSelectNode="@NodeSelected" />
+        </div>
+    }
+</content>
+
+@code {
+    bool _loading = true;
+    IEnumerable<Tuple<Vault, SecretProperties>> _secrets;
+    List<Node<SecretProperties>> _nodes;
+    Node<SecretProperties> _selectedNode;
+    CancellationTokenSource _tokenSource;
+    string _progress;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tokenSource = new CancellationTokenSource();
+        _secrets = await KeyVaultService.GetSecretsAsync(_tokenSource.Token, new Progress<string>(UpdateLoadingProgress));
+        _nodes = new List<Node<SecretProperties>>();
+
+        foreach (var secret in _secrets)
+        {
+            var secretName = $"{secret.Item1.Data.Name}-{secret.Item2.Name}";
+            var keyParts = secretName.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+            CreateTreeFromKeyName(secret.Item2, keyParts, _nodes);
+        }
+
+        _loading = false;
+    }
+
+    private void UpdateLoadingProgress(string progress)
+    {
+        _progress = $"Loading {progress}...";
+        this.StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _tokenSource?.Cancel();
+    }
+
+    private void CreateTreeFromKeyName(SecretProperties secret, IEnumerable<string> keyParts, List<Node<SecretProperties>> nodes, Node<SecretProperties> parent = null)
+    {
+        if (keyParts.Count() == 0) return;
+
+        var isLeafNode = keyParts.Count() == 2;
+        var part = keyParts.First();
+        var node = nodes.SingleOrDefault(node => node.Name == part);
+
+        if (node == null)
+        {
+            node = new Node<SecretProperties>(part, parent);
+            nodes.Add(node);
+        }
+
+        if (isLeafNode)
+        {
+            node.Leaves.Add(new Leaf<SecretProperties>(keyParts.Skip(1).First(), secret));
+            return;
+        }
+
+        CreateTreeFromKeyName(secret, keyParts.Skip(1), node.Nodes, node);
+    }
+
+    private void NodeSelected(Node<SecretProperties> node)
+    {
+        _selectedNode = node;
+    }
+
+    //private async Task GetSecretValue(SecretProperties secret)
+    //{
+    //    _value = await _service.GetSecretValueAsync(secret);
+
+    //}
+}

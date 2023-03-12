@@ -1,0 +1,78 @@
+﻿@using Azure.Security.KeyVault.Secrets
+@using Hemligheter.Data
+
+@inject KeyVaultService KeyVaultService
+
+<div class="card">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col" width="40px"></th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Account</th>
+                    <th scope="col">URL</th>
+                    <th scope="col" width="141px">Date modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var node in Node.Nodes)
+                {
+                    <tr @key="node">
+                        <td><span class="material-icons-outlined">folder</span></td>
+                        <td><a href="#" title="Open folder" @onclick="() => OnClickNode(node)" @onclick:preventDefault>@node.Name</a></td>
+                        <td></td>
+                        <td></td>
+                        <td><span>@node.UpdatedOn().ToString("yyyy-MM-dd HH:mm")</span></td>
+                    </tr>
+                }
+
+                @foreach (var leaf in Node.Leaves)
+                {
+                    leaf.Value.Tags.TryGetValue("Url", out var url);
+                    leaf.Value.Tags.TryGetValue("Account", out var account);
+                    bool isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
+                    <tr @key="leaf.Value">
+                        <td><span class="material-icons-outlined">key</span></td>
+                        <td><span>@leaf.Name</span><CopyButton CssClass="ms-1" OnGetValue="async () => await GetSecretValue(leaf.Value)" /></td>
+                        @*<td></td>*@
+                        <td><span>@account</span><CopyButton CssClass="ms-1" Value="@account" /></td>
+                        <td>
+                            @if (isUrl)
+                            {
+                                <a href="@url" target="_blank" title="Open link">@url</a>
+                            }
+                            else
+                            {
+                                <span>@url</span>
+                            }
+                            <CopyButton CssClass="ms-1" Value="@url" />
+                        </td>
+                        <td><span>@leaf.Value.UpdatedOn?.ToString("yyyy-MM-dd HH:mm")</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Node<SecretProperties> Node { get; set; }
+
+    [Parameter]
+    public EventCallback<Node<SecretProperties>> OnSelectNode { get; set; }
+    
+    private async Task<string> GetSecretValue(SecretProperties secret)
+    {
+        return await KeyVaultService.GetSecretValueAsync(secret);
+    }
+
+    private void OnClickNode(Node<SecretProperties> node)
+    {
+        if (OnSelectNode.HasDelegate)
+        {
+            OnSelectNode.InvokeAsync(node);
+        }
+    }
+}

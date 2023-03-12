@@ -1,0 +1,36 @@
+﻿@using Hemligheter.Data
+@typeparam TItem
+
+<ul class="list-group">
+    @foreach (var node in Nodes)
+    {
+        <li class="list-group-item">
+            <div @onclick="() => OnClickNode(node)" class="d-flex justify-content-between align-items-center"><span class="@(node == ActiveNode ? "fw-bold" : null)">@node.Name</span><span class="badge bg-primary rounded-pill">@node.Nodes.Count</span></div>
+            @if (node.Expanded && node.Nodes.Any())
+            {
+                <NodeList Nodes=node.Nodes OnSelectNode=OnSelectNode ActiveNode=ActiveNode />
+            }
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public IEnumerable<Node<TItem>> Nodes { get; set; }
+
+    [Parameter]
+    public Node<TItem> ActiveNode { get; set; }
+
+    [Parameter]
+    public EventCallback<Node<TItem>> OnSelectNode { get; set; }
+
+    private void OnClickNode(Node<TItem> node)
+    {
+        node.Expanded = !node.Expanded;
+
+        if (OnSelectNode.HasDelegate)
+        {
+            OnSelectNode.InvokeAsync(node);
+        }
+    }
+}

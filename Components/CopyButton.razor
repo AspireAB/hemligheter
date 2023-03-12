@@ -1,0 +1,47 @@
+﻿
+@if (string.IsNullOrWhiteSpace(Value) == false || OnGetValue != null)
+{
+    <a class="copy-button @CssClass" href="#" @onclick:preventDefault @onclick="CopyValue">
+        @if (_loading)
+        {
+            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+        }
+        else if (_copied)
+        {
+            <span class="material-icons text-success fs-5" title="Copied!">done</span>
+        }
+        else
+        {
+            <span class="material-icons text-secondary fs-5" title="Copy">content_copy</span>
+        }
+    </a>
+}
+
+@code {
+    [Parameter]
+    public string Value { get; set; }
+
+    [Parameter]
+    public Func<Task<string>> OnGetValue { get; set; }
+
+    [Parameter]
+    public string CssClass { get; set; }
+
+    private bool _copied = false;
+    private bool _loading = false;
+
+    private async Task CopyValue()
+    {
+        _loading = true;
+
+        if (OnGetValue != null)
+        {
+            Value = await OnGetValue();
+        }
+
+        await Clipboard.SetTextAsync(Value);
+
+        _loading = false;
+        _copied = true;
+    }
+}

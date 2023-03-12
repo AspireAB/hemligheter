@@ -1,0 +1,27 @@
+﻿@using Hemligheter.Services
+
+@inject UserService UserService
+
+<div class="d-flex align-items-center">
+    <span class="oi oi-person me-2" aria-hidden="true"></span>
+    @if (_user == null)
+    {
+        <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    }
+    else
+    {
+        <strong>@_user.FullName</strong>
+    }
+</div>
+
+@code {
+
+    AuthenticatedUser _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await UserService.GetUserAsync();
+    }
+}
