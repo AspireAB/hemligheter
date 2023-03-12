@@ -35,13 +35,13 @@ jobs:
         run: msbuild $env:Project_Name.sln /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutDir="./_build"
         
       - name: Create Package
-        run: 7z a -tzip "$env:Project_Name-$env:$GITHUB_REF_NAME.zip" "./_build/*"
+        run: 7z a -tzip "$env:Project_Name-$env:GITHUB_REF_NAME.zip" "./_build/*"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
           name: Output
-          path: "$env:Project_Name-$env:$GITHUB_REF_NAME.zip"
+          path: "$env:Project_Name-$env:GITHUB_REF_NAME.zip"
 
       - name: Release
         uses: "marvinpinto/action-automatic-releases@latest"
@@ -50,4 +50,4 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           draft: true
-          files: $env:Project_Name-$env:$GITHUB_REF_NAME.zip
+          files: $env:Project_Name-$env:GITHUB_REF_NAME.zip
