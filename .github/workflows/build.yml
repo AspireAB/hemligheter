@@ -1,0 +1,29 @@
+name: .NET Build
+
+env:
+  Solution_Name: Hemligheter.sln
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup Nuget.exe for use with actions
+        uses: Nuget/Setup-nuget@v1.0.2
+
+      - name: Restore Nuget Packages
+        run: nuget restore $env:Solution_Name
+
+      - name: Build Solution
+        run: msbuild $env:Solution_Name
