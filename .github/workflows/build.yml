@@ -12,6 +12,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
 
     steps:
       - uses: actions/checkout@v3
@@ -20,10 +24,19 @@ jobs:
         uses: microsoft/setup-msbuild@v1
 
       - name: Setup Nuget.exe for use with actions
-        uses: Nuget/Setup-nuget@v1.1.1
+        uses: Nuget/Setup-nuget@v1
 
       - name: Restore Nuget Packages
         run: nuget restore $env:Solution_Name
+        
+      - name: Create Build Directory
+        run: mkdir _build
 
       - name: Build Solution
-        run: msbuild $env:Solution_Name
+        run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:OutDir="./_build"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Output
+          path: "./_build"
