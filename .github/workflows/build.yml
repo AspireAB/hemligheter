@@ -1,0 +1,55 @@
+name: .NET Build
+
+env:
+  Project_Name: Hemligheter
+  Configuration: Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup Nuget
+        uses: Nuget/Setup-nuget@v1
+
+      - name: Restore Nuget packages
+        run: nuget restore $env:Project_Name.sln
+        
+      - name: Create build directory
+        run: mkdir _build
+
+      - name: Build solution
+        run: msbuild $env:Project_Name.sln /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutDir="./_build"
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Output
+          path: "./_build/"
+
+      - name: Create release package
+        run: 7z a -tzip "$env:Project_Name-$env:GITHUB_REF_NAME.zip" "./_build/*"
+        if: github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/v')
+
+      - name: Publish release draft
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/v')
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          draft: true
+          files: |
+            *.zip
