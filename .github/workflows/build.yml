@@ -51,4 +51,5 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           draft: true
-          files: "$env:Project_Name-$env:GITHUB_REF_NAME.zip"
+          files: |
+            *.zip
