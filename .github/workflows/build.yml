@@ -1,7 +1,7 @@
 name: .NET Build
 
 env:
-  Solution_Name: Hemligheter.sln
+  Project_Name: Hemligheter
   Configuration: Release
 
 on:
@@ -26,29 +26,28 @@ jobs:
         uses: Nuget/Setup-nuget@v1
 
       - name: Restore Nuget Packages
-        run: nuget restore $env:Solution_Name
+        run: nuget restore $env:Project_Name.sln
         
       - name: Create Build Directory
         run: mkdir _build
 
       - name: Build Solution
-        run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutDir="./_build"
+        run: msbuild $env:Project_Name.sln /p:Configuration=$env:Configuration /p:Platform="Any CPU" /p:OutDir="./_build"
         
       - name: Create Package
-        run: 7z a -tzip Hemligheter.zip "./_build/*"
+        run: 7z a -tzip "$env:Project_Name-$env:$GITHUB_REF_NAME.zip" "./_build/*"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
           name: Output
-          path: Hemligheter.zip
+          path: "$env:Project_Name-$env:$GITHUB_REF_NAME.zip"
 
       - name: Release
         uses: "marvinpinto/action-automatic-releases@latest"
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/v')
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
           prerelease: false
           draft: true
-          files: Hemligheter.zip
+          files: $env:Project_Name-$env:$GITHUB_REF_NAME.zip
