@@ -142,7 +142,7 @@ namespace Hemligheter.Services
             {
                 var authEx = new AuthenticationExceptionFactory();
                 authEx.Add(ex);
-                var magicUri = new Uri("urn:ietf:wg:oauth:2.0:oob");
+                var magicUri = new Uri("https://login.microsoftonline.com/common/oauth2/nativeclient");
                 try
                 {
                     // Try to get the token silently, either using the token cache or browser cookies.
