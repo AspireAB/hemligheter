@@ -1,3 +1,5 @@
+[![.NET Build](https://github.com/Nethouse/hemligheter/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Nethouse/hemligheter/actions/workflows/build.yml)
+
 # Hemligheter
 Password manager backed by Azure Key Vault
 
